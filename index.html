@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Population Health Policy Platform</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0b1a14; }
+    textarea:focus, input:focus, button:focus { outline: none; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+    ::-webkit-scrollbar-thumb { background: rgba(116,198,157,0.2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+// ─── BRIDGE EXERCISES DATA ────────────────────────────────────────────────────
+
+const BRIDGE_EXERCISES = [
+  {
+    id: "B1",
+    instrument: "strategy",
+    instrumentLabel: "Population Health Strategy",
+    title: "The CHNA That Hid Its Own Answer",
+    subtitle: "Toward the Strategy Instrument",
+    chapters: "Chapters 1, 2, 6, 7",
+    principles: ["Health Equity", "Social Needs", "Continuum of Care", "Evaluation"],
+    context: `Riverside Health System completes its triennial Community Health Needs Assessment. The methodology: 400 patient surveys administered in waiting rooms, three physician focus groups, and a review of county mortality data. Top identified needs: diabetes management (system-wide control rate: 68%), hypertension (61%), and behavioral health access (34% utilization). Leadership celebrates the clarity of the findings.
+
+The implementation strategy sets three aggregate targets: raise diabetes control to 75%, hypertension control to 70%, and behavioral health utilization to 45%. All targets are system-wide composites. No social determinants analysis was conducted. No disaggregation by race, income, payer, or language appears in either document. The strategy is formally adopted by the governing board and submitted to TJC.`,
+    dataTable: {
+      caption: "Data collected but never analyzed — subgroup breakdown of the same three metrics:",
+      rows: [
+        { category: "Diabetes control — Commercial insured", value: "81%", color: "#52B788" },
+        { category: "Diabetes control — Medicare", value: "74%", color: "#74C69D" },
+        { category: "Diabetes control — Medicaid", value: "41%", color: "#c94040" },
+        { category: "Hypertension control — White patients", value: "71%", color: "#52B788" },
+        { category: "Hypertension control — Hispanic patients", value: "58%", color: "#d48e1a" },
+        { category: "Hypertension control — Black patients", value: "49%", color: "#c94040" },
+        { category: "Behavioral health — English-preferred", value: "38%", color: "#74C69D" },
+        { category: "Behavioral health — Spanish-preferred", value: "12%", color: "#c94040" },
+        { category: "CHNA survey — Medicaid-enrolled respondents", value: "8%", color: "#c94040" },
+      ]
+    },
+    prediction: {
+      question: "If this strategy is executed as written and the aggregate 75% diabetes control target is achieved — what happens to health equity?",
+      options: [
+        { value: "A", text: "Equity improves — all groups benefit when system-wide performance rises." },
+        { value: "B", text: "Equity is unchanged — aggregate targets are neutral with respect to subgroups." },
+        { value: "C", text: "Equity likely worsens — aggregate improvement can mask and even widen subgroup gaps, particularly when interventions reach the already-advantaged population first." },
+      ],
+      correct: "C"
+    },
+    finding: `The strategy's aggregate target of 75% could be achieved entirely by improving Commercial patients from 81% → 88% while the Medicaid group holds flat at 41%. Aggregate: mission accomplished. Equity gap (Commercial vs. Medicaid): widened from 40 points to 47 points. The strategy contains no mechanism to detect this. The CHNA methodology — with only 8% Medicaid survey representation — structurally excluded the highest-need population from shaping the priorities designed to serve them. TJC and NCQA have no basis for holding this organization accountable for equity because no equity standard was ever written into the document.`,
+    analysis: {
+      obvious: `The strategy's aggregate targets are blind to equity by design. A 75% composite goal says nothing about whether the 41% Medicaid group moves at all. The CHNA methodology is itself a formalization failure — a needs assessment that underrepresents the highest-need population by a factor of 12:1 (Medicaid patients are ~48% of the patient population but 8% of survey respondents) will systematically produce findings that reflect the concerns of the already-advantaged.`,
+      nuanced: `This is the central mechanism by which well-intentioned population health strategies worsen equity: interventions requiring patient engagement, scheduling flexibility, transportation, and health literacy tend to reach commercially insured, English-proficient, stable-housing populations faster and more completely. Without equity-specific targets and disaggregated tracking, the same intervention can simultaneously improve the aggregate metric and widen the disparity — a result that looks like success by every measure the organization chose to measure. Bhattacharya's insistence that equity must be formalized as a purpose statement is not rhetorical — it is the only mechanism that makes this gap visible and actionable before the damage is done.`,
+      action: `The strategy must be rebuilt with four structural additions: (1) Population-specific targets disaggregated by payer, race, and language — not as a supplement to aggregate targets but as primary accountability metrics. (2) CHNA methodology redesigned to ensure proportional representation of Medicaid, LEP, and uninsured populations in needs identification. (3) Social determinants interventions — housing, transportation, food access, language access — addressed explicitly alongside clinical interventions for each identified priority. (4) An equity evaluation checkpoint built into every quarterly review: the normative question "are we closing gaps, or widening them?" must be answered with disaggregated data before the strategy can be deemed to be working.`,
+    },
+    synthesis: {
+      prompt: "This failure will appear in three sections of your Strategy instrument. Before you draft them, describe specifically what you will write in each to prevent this:",
+      sections: [
+        "Population & Community Context — what data will you include and how will you represent it?",
+        "Health Equity Commitment — what specific language will move this beyond a values statement?",
+        "Evaluation Framework — what disaggregated metrics will you require, and what triggers a course correction?"
+      ]
+    }
+  },
+  {
+    id: "B2",
+    instrument: "policy",
+    instrumentLabel: "Population Health Policy Instrument",
+    title: "The Policy That Governed No One",
+    subtitle: "Toward the Policy Instrument",
+    chapters: "Chapters 3, 4, 5, 11",
+    principles: ["Formalization", "Cross-Functional Collaboration", "Standardization & Customization"],
+    context: `Metropolitan Health issues a new Diversity, Equity & Inclusion Policy as part of its Joint Commission accreditation preparation. The Quality Department is given two weeks to produce it. The document submitted for accreditation review reads in its entirety:
+
+──────────────────────────────────────
+METROPOLITAN HEALTH
+Policy Number: HR-2024-04
+Title: Diversity, Equity and Inclusion Policy
+Effective Date: March 1, 2024    Next Review: March 1, 2026
+
+"Metropolitan Health is committed to diversity, equity and inclusion in all aspects of patient care and workforce development. We believe in treating all patients and employees with dignity and respect."
+──────────────────────────────────────
+
+TJC Surveyor Finding: "Policy does not meet minimum documentation standards. No scope specified — policy technically applies to no person or department. No definitions provided — key terms are uninterpreted and unenforced. No responsibilities assigned — no named role owns execution. No procedures articulated — no operational guidance exists for any scenario. Policy statement is indistinguishable from a values statement. Unable to assess compliance."`,
+    dataTable: {
+      caption: "Consequence mapping — what each missing element means for patients and staff:",
+      rows: [
+        { category: "Missing: Scope", value: "Policy applies to no one", color: "#c94040" },
+        { category: "Missing: Definitions", value: "12 departments interpret 'equity' differently", color: "#c94040" },
+        { category: "Missing: Responsibilities", value: "No named role owns execution", color: "#c94040" },
+        { category: "Missing: Procedures", value: "No protocol when patient reports discriminatory care", color: "#c94040" },
+        { category: "Missing: Purpose Statement", value: "No measurable objective; success undefined", color: "#c94040" },
+        { category: "Missing: Policy Section", value: "No specific issues resolved; duties unassigned", color: "#c94040" },
+      ]
+    },
+    prediction: {
+      question: "Which single missing element poses the greatest direct patient safety risk?",
+      options: [
+        { value: "A", text: "Missing Scope — without scope, the policy is unenforceable against any individual or department." },
+        { value: "B", text: "Missing Procedures — when a patient reports discriminatory care, there is no protocol for investigation, response, or remedy. The patient has no formal recourse." },
+        { value: "C", text: "Missing Definitions — without shared definitions, equity violations go unrecognized because staff have no basis for identifying a reportable event." },
+      ],
+      correct: null // No single correct answer — both B and C are defensible; the analysis unpacks the nuance
+    },
+    finding: `The TJC surveyor's finding is precise: this is not a policy — it is an aspiration in policy form. The document protects the organization from no accountability because it establishes none. But the most consequential gap is the interaction between missing definitions and missing procedures: staff cannot recognize an equity violation if the organization has never defined what one is, and even if they recognize it, there is no protocol for what to do. The policy's absence is itself an equity failure — it eliminates the patient's formal recourse before any encounter has taken place.`,
+    analysis: {
+      obvious: `A policy without scope, definitions, responsibilities, or procedures is a statement of intent that cannot be measured, enforced, or operationalized. The TJC surveyor is correct: this document cannot establish compliance because it establishes nothing. Every section that Bhattacharya identifies as essential — scope, purpose, definitions, policy section (responsibilities), procedures — is absent. The Quality Department produced a values statement in the format of a policy header.`,
+      nuanced: `The most instructive failure here is not the absence of any single section but the conflation of aspiration with governance. Bhattacharya's principle of formalization is precise on this point: the dispositive issue is whether expectations were formalized — documented in written instruments or adopted through customary practice. A two-sentence commitment statement does neither. Critically, a policy without procedures does not merely fail to help patients who experience inequitable care — it actively harms them by eliminating the formal mechanism through which their experience could be documented, investigated, and remedied. The organization has made a public commitment to equity in its name, and then structured itself so that commitment cannot be kept or evaluated.`,
+      action: `Rebuild the policy with all required sections per the textbook framework. The Policy Statement must articulate the governing equity principle — not a platitude but a specific commitment to what the organization will do and not do. The Purpose Statement must define measurable, equity-driven objectives tied to specific outcomes. The Scope must name every department, facility, and patient population it covers — particularly high-risk populations. Definitions must establish organizational-specific meanings for key terms so that "discriminatory care," "equitable treatment," and "equity violation" are not subject to individual interpretation. Responsibilities must assign named roles with specific duties. Procedures must provide step-by-step protocols for at minimum: (1) patient complaint of inequitable care, (2) staff report of an equity violation, and (3) annual equity audit process. Each of these procedures requires that frontline staff — who know the hands-on process — participate in drafting them, per TJC's own recommendation.`,
+    },
+    synthesis: {
+      prompt: "This case maps directly to six sections of your Policy instrument. Before you draft them, answer specifically:",
+      sections: [
+        "Policy Statement vs. Purpose Statement — how will you ensure they answer three distinct questions rather than repeat the same aspiration?",
+        "Scope — who and what will you explicitly include, and why does specificity matter more than breadth?",
+        "Procedures — what three patient-facing scenarios will you write procedures for, and who will draft them?"
+      ]
+    }
+  },
+  {
+    id: "B3",
+    instrument: "action",
+    instrumentLabel: "Population Health Action Plan",
+    title: "The Metrics That Declared Victory While Losing Ground",
+    subtitle: "Toward the Action Plan",
+    chapters: "Chapters 3, 9, 10, 12",
+    principles: ["Comprehensive Evaluation", "Scientific Rigor", "Securing Trust"],
+    context: `Northridge Health participates in CMS Hospital Value-Based Purchasing. Over 24 months, their HCAHPS composite score improves from the 65th to 72nd percentile nationally — a 7-point gain. Leadership declares the quality improvement initiative a success, disburses the QI team, and submits a board report with the following executive summary:
+
+"Patient experience has improved significantly. Our investment in communication training has yielded measurable results. The initiative is complete."
+
+The communication training program: 18-month rollout, conducted in English, no cultural adaptation component, reached 94% of clinical staff.
+
+The board report contained one table: the composite HCAHPS trend. It did not contain disaggregated data.`,
+    dataTable: {
+      caption: "Disaggregated HCAHPS data — collected but not reviewed before the initiative was closed:",
+      rows: [
+        { category: "White patients", value: "71st → 78th percentile (+7)", color: "#52B788" },
+        { category: "Black patients", value: "58th → 54th percentile (−4)", color: "#c94040" },
+        { category: "Hispanic patients", value: "49th → 49th percentile (0)", color: "#d48e1a" },
+        { category: "Medicaid patients", value: "44th → 40th percentile (−4)", color: "#c94040" },
+        { category: "Limited English Proficient", value: "31st → 29th percentile (−2)", color: "#c94040" },
+        { category: "Equity gap (White vs. Black)", value: "13 points → 24 points (widened)", color: "#c94040" },
+        { category: "Equity gap (White vs. LEP)", value: "40 points → 49 points (widened)", color: "#c94040" },
+      ]
+    },
+    prediction: {
+      question: "By Bhattacharya's definition of the purpose of population health policy — to advance health equity — how should this initiative be evaluated?",
+      options: [
+        { value: "A", text: "Successful — HCAHPS composite improved significantly, meeting the initiative's stated objective." },
+        { value: "B", text: "Partially successful — aggregate improvement is real, but equity dimensions were not addressed." },
+        { value: "C", text: "Failed — the initiative improved the composite while worsening disparities for Black, Medicaid, and LEP patients. It advanced the average and deepened inequity simultaneously." },
+      ],
+      correct: "C"
+    },
+    finding: `The composite improved +7 points. The equity gap between White and Black patients widened from 13 to 24 points. The equity gap between White and LEP patients widened from 40 to 49 points. Four of five subgroups either declined or held flat. The initiative's design — English-only communication training with no cultural adaptation — was structurally unable to produce equity-relevant results for the populations most in need. The normative question Bhattacharya requires — "are we advancing equity?" — was never asked because it was never built into the evaluation framework. The board declared victory on a metric that made the inequity invisible.`,
+    analysis: {
+      obvious: `Aggregate improvement masked equity deterioration. The initiative succeeded on its stated metric and failed on its more important one. Disbanding the QI team before reviewing disaggregated data means there is no mechanism to detect or correct the worsening disparities. The executive summary's assertion — "patient experience has improved significantly" — is accurate in aggregate and false in equity terms simultaneously. Both statements are true; only one was reported.`,
+      nuanced: `This failure has a structural driver: CMS VBP rewards aggregate composite scores, creating a financial incentive to optimize for the already-advantaged population (White, English-proficient, commercially insured patients) whose marginal improvement is easiest to achieve through standard interventions. English-only communication training will reliably benefit English-proficient patients. It cannot produce equity-relevant results for LEP patients not because it is poorly executed, but because it was never designed to reach them. The initiative was designed to improve the average — not close the gap — and it succeeded at exactly what it was designed to do. The policy failure is not in the QI team's execution; it is in the absence of an equity evaluation framework that would have caught this before the initiative closed. Bhattacharya's distinction between normative inquiry (are we doing the right things?) and empirical inquiry (are we doing them effectively?) is precisely relevant: the initiative conducted empirical evaluation only, and found success. Normative evaluation was absent, and that absence is where equity went invisible.`,
+      action: `An action plan that prevents this failure must contain five structural commitments: (1) Disaggregated baseline metrics by race, ethnicity, payer, and language as a required starting point — not optional analysis. (2) Equity-specific targets alongside aggregate targets, with explicit definitions of what "closing the gap" means numerically. (3) A normative checkpoint in every quarterly review: the question "are we advancing equity?" answered with subgroup data, not composite data. (4) An explicit course-correction trigger: if any subgroup's metric declines while the composite improves, the initiative is not closed — it is redesigned. (5) Culturally adapted implementation protocols acknowledging that a single program design cannot produce equity-relevant results across linguistically and culturally distinct populations — this is not a nice-to-have; it is the mechanism through which trust with historically underserved communities is built or lost.`,
+    },
+    synthesis: {
+      prompt: "This failure implicates three action plan sections most directly. Before you draft them, commit specifically to:",
+      sections: [
+        "Equity Goals & Baseline Metrics — what disaggregated data will you require at baseline, and what gap-closing targets will you set?",
+        "Evaluation & Progress Tracking — how will you build the normative checkpoint in? What triggers a course correction?",
+        "Trust-Building Measures — what does this case tell you a community that experienced worsening outcomes would need to see from the organization before they trusted the next initiative?"
+      ]
+    }
+  }
+];
+
+// ─── EXISTING DATA (unchanged) ────────────────────────────────────────────────
+
+const PRINCIPLES = [
+  { id: 1, short: "Health Equity", full: "Commit to Advancing Health Equity", chapter: 2, color: "#2D6A4F", description: "The purpose of population health policy is to advance health equity. This foundational principle recognizes that variability in health outcomes among groups demands an equity-driven response rooted in historical understanding and actionable standards.", quiz: [{ q: "How does the textbook define the primary purpose of population health policy?", options: ["To reduce healthcare costs across all populations", "To advance health equity", "To standardize clinical protocols nationwide", "To expand insurance coverage"], answer: 1, explanation: "Bhattacharya argues that health equity is the only acceptable goal, drawing on Dr. Paul Farmer's assertion and situating equity as the cornerstone of all subsequent principles." }, { q: "What distinguishes population health from public health according to Kindig and Stoddart's modern definition?", options: ["Population health focuses on individual patient outcomes only", "Population health addresses health outcomes of a group and their distribution within the group", "Public health focuses on attributable patients in healthcare organizations", "Population health is exclusively concerned with governmental budgets"], answer: 1, explanation: "Kindig and Stoddart coined population health as 'the health outcomes of a group of individuals, including the distribution of such outcomes within the group,' distinguishable from public health's broader governmental focus." }], caseStudy: { title: "Hypertension Management Disparities", context: "A large urban health system notices that Black patients with hypertension have 30-day readmission rates nearly double that of white patients, despite similar clinical presentations at discharge.", prompts: ["What structural and social factors might explain this disparity beyond individual patient behavior?", "How would you apply Principle 1 to frame a policy response — what would 'committing to equity' look like in concrete institutional terms?", "What baseline metrics would you establish, and who would you engage as stakeholders in this process?"], externalSource: "SPRINT Trial (2015) findings on blood pressure control outcomes across demographic groups" }, reflection: "Describe a population health disparity you have observed or read about. What institutional policies may have contributed to it, and what would an equity-centered response look like?" },
+  { id: 2, short: "Collaboration", full: "Facilitate Cross-Functional Collaboration", chapter: 3, color: "#1B4332", description: "Advancing health equity requires assembling diverse perspectives across departments — quality and safety, ethics, care coordination, diversity — to create a holistic approach to policy development and implementation.", quiz: [{ q: "Which age-related workforce factor has been identified as significant in emotional exhaustion and depersonalization among nurses?", options: ["Mid-career plateau", "Younger age", "Pre-retirement stress", "Generational mentorship gaps"], answer: 1, explanation: "Research cited in Chapter 3 found that younger age was a significant factor in emotional exhaustion and depersonalization among nurses, underscoring the need for targeted workforce interventions." }, { q: "What does the textbook recommend as a strategy to address intergenerational communication disparities in care?", options: ["Standardized patient assignment by age matching", "Mentoring and training, including intergenerational mentoring programs", "Removing younger nurses from older patient assignments", "Digital-only communication protocols"], answer: 1, explanation: "Mentoring and training — particularly intergenerational mentoring — were associated with positive workforce perceptions, quality patient-centered care, and improved retention." }], caseStudy: { title: "Behavioral Health Integration Failure", context: "A regional hospital system attempts to integrate behavioral health services into primary care. Despite administrative approval, the initiative stalls because clinical staff, social workers, and the ethics committee were never included in the design process.", prompts: ["What cross-functional stakeholders should have been involved from the outset, and why?", "How might siloed decision-making undermine population health outcomes in this scenario?", "Design a brief collaboration protocol that would have prevented this failure."], externalSource: "NCQA Population Health Management Standards on interdisciplinary care teams" }, reflection: "Think of an initiative you've been part of or studied that failed due to insufficient collaboration. What disciplines or perspectives were missing, and how did their absence affect outcomes?" },
+  { id: 3, short: "Formalization", full: "Define and Formalize Policy Objectives", chapter: 4, color: "#40916C", description: "Population health policy includes the formalization of rules and directives, documented in written instruments or adopted through customary practice. Formalization provides the structure needed to guide collaborative efforts and sustain equity goals.", quiz: [{ q: "How does The Joint Commission (TJC) distinguish a policy from a procedure?", options: ["Policies provide step-by-step instructions; procedures state principles", "Policies are statements of expectations that guide decisions; procedures articulate how tasks are performed", "Policies apply only to clinical staff; procedures apply to administrators", "There is no functional distinction — TJC treats them identically"], answer: 1, explanation: "TJC defines a policy as a statement of expectations that influences decisions and actions — the rules and principles guiding procedures — while procedures provide step-by-step task instructions." }, { q: "What are the three distinct issues that a well-structured policy document should address?", options: ["Goals, timelines, and budgets", "The overarching principle, why the policy exists, and what specific issues it will resolve", "Scope, staffing, and compliance metrics", "Legislative basis, regulatory alignment, and enforcement mechanism"], answer: 1, explanation: "The textbook distinguishes: (1) the policy statement captures the governing value, (2) the purpose statement explains why the policy exists, and (3) the policy section articulates what specific issues will be resolved." }], caseStudy: { title: "Language Access Policy Scope Error", context: "A multi-site health system applies for national accreditation. Their language access policy was only scoped to select facilities. They receive partial accreditation — only for the facilities listed in the policy's scope section.", prompts: ["What are the patient care implications of a policy with an insufficient scope?", "Using the textbook's framework, how would you revise the policy statement, purpose statement, and scope section?", "What process would you put in place to prevent scope errors in future policy development?"], externalSource: "Sample Language Access Policy included in course materials" }, reflection: "Examine a policy you've encountered — in a workplace, institution, or public setting. Does it clearly articulate its purpose, scope, and the specific issues it resolves? What is missing?" },
+  { id: 4, short: "Continuum of Care", full: "Integrate Approaches Across the Continuum of Care", chapter: 5, color: "#52B788", description: "Equity efforts must be sustained from prevention through treatment and rehabilitation. Integration across the care continuum ensures that population health policy is not siloed at any single point of care.", quiz: [{ q: "What does integration across the continuum of care require in terms of policy design?", options: ["A single unified policy for all stages of care", "A continuum of care plan covering prevention, early detection, treatment, and rehabilitation with equity in mind", "Separate policies for each department with no cross-reference", "Focus exclusively on acute care settings where outcomes are most measurable"], answer: 1, explanation: "The fourth principle demands that care plans be comprehensive and inclusive, addressing all stages — prevention, early detection, treatment, rehabilitation — with equity considerations embedded throughout." }], caseStudy: { title: "Discharge Planning Breakdown", context: "A hospital excels at acute care for diabetic patients but has no formalized follow-up protocol. Readmission rates spike at 60 days post-discharge, particularly among patients in low-income zip codes.", prompts: ["Where does the continuum break down in this scenario, and what policies are absent?", "How would you design an integrated approach that addresses prevention, treatment, and post-discharge care?", "What community partnerships would be necessary to sustain this continuum?"], externalSource: "Hospital Readmissions Reduction Program (HRRP) — CMS policy context" }, reflection: "Describe a gap in the care continuum you've observed. At what point does continuity break down, and what structural or policy factors contribute to that breakdown?" },
+  { id: 5, short: "Standardization & Customization", full: "Balance Standardization and Customization", chapter: 6, color: "#74C69D", description: "Consistency in care delivery must be balanced with the flexibility to address the unique needs of diverse patient populations. Neither pure standardization nor pure customization alone adequately advances health equity.", quiz: [{ q: "Why is pure standardization insufficient for advancing health equity in population health policy?", options: ["Standardization is too expensive to implement at scale", "One-size-fits-all approaches cannot address the unique social and cultural factors that drive health disparities", "Standardized protocols conflict with TJC accreditation requirements", "Clinical staff resist standardized approaches"], answer: 1, explanation: "Research on tailored health interventions demonstrates that one size does not fit all — customization to demographic, cultural, and social factors is essential for achieving equitable outcomes." }], caseStudy: { title: "Asthma Guidelines Implementation", context: "A health system adopts the National Asthma Education and Prevention Program guidelines. They implement them uniformly across all sites, ignoring that their highest-risk population — children in high-pollution urban neighborhoods — has substantially different trigger profiles and access barriers.", prompts: ["How does this case illustrate the tension between standardization and customization?", "What data would you need to customize the protocol appropriately while maintaining evidence-based standards?", "Draft a brief policy statement that explicitly addresses this balance."], externalSource: "NAEPP Expert Panel Report series (1991–2020) on evolving asthma care guidelines" }, reflection: "Describe a protocol or policy that was applied uniformly but should have been customized. What were the consequences, and what would an appropriately balanced approach have looked like?" },
+  { id: 6, short: "Social Needs", full: "Alleviate Health-Related Social Needs", chapter: 7, color: "#95D5B2", description: "Addressing social determinants of health — housing, education, nutrition, economic stability — is critical to achieving health equity. Healthcare organizations must partner with community sectors to build networks of support beyond clinical walls.", quiz: [{ q: "What does the Community Health Needs Assessment (CHNA) require hospitals to document?", options: ["Financial projections for community benefit programs", "The community served, assessment methodologies, stakeholder input, prioritized health needs, and available resources", "Annual physician satisfaction surveys and turnover rates", "Compliance records with CMS billing requirements"], answer: 1, explanation: "The CHNA must provide a comprehensive account of the community served, methodologies used, stakeholder input, prioritized health needs, and descriptions of available resources — all made publicly available." }], caseStudy: { title: "CHNA Without Community Voice", context: "A nonprofit hospital conducts its CHNA using only administrative data and physician surveys. It identifies diabetes and hypertension as top priorities. Community members later report that food insecurity and housing instability — which they consider primary drivers — were never surfaced in the process.", prompts: ["What methodological failures led to this gap, and how does it relate to Principle 6?", "How would you redesign the CHNA process to surface social determinants that communities themselves identify as priorities?", "What implementation strategy components would address the social needs once properly identified?"], externalSource: "IRS Form 990 Schedule H requirements for nonprofit hospital CHNA compliance" }, reflection: "What social determinants of health most significantly affect the population you work with or study? What specific policy levers could a healthcare organization use to address them?" },
+  { id: 7, short: "Clinical Alignment", full: "Align with Clinical Operations", chapter: 8, color: "#B7E4C7", description: "Population health policies must be integrated into the daily operations of clinical services. Health equity training for clinical staff ensures that social and clinical care work in concert rather than in parallel.", quiz: [{ q: "What does aligning population health policy with clinical operations require?", options: ["Transferring all population health responsibilities to administrative staff", "Training clinical staff on health equity principles and integrating social and clinical care in daily practice", "Creating a separate population health department with no clinical interface", "Standardizing all clinical workflows regardless of patient population"], answer: 1, explanation: "Alignment means that population health policies are embedded in daily clinical workflows — not siloed — and that clinical staff are trained to understand and apply equity principles in their practice." }], caseStudy: { title: "Value-Based Program Implementation", context: "A health system participates in a CMS value-based purchasing program. The quality metrics improve system-wide, but disaggregated data reveals that outcomes for Medicaid-enrolled patients have stagnated. Clinical teams are unaware of the disparity.", prompts: ["What clinical operations failures allowed this disparity to go undetected and unaddressed?", "How would you embed equity considerations into clinical workflows and performance reviews?", "What policies would ensure that clinical teams are accountable for equity outcomes, not just aggregate metrics?"], externalSource: "CMS Hospital Value-Based Purchasing (VBP) Program — Percentage Payment Summary Report methodology" }, reflection: "How does population health policy currently intersect with clinical operations in a setting you're familiar with? Where are the gaps, and what would genuine alignment require?" },
+  { id: 8, short: "Evaluation", full: "Implement Comprehensive Evaluation", chapter: 9, color: "#52B788", description: "Comprehensive evaluation provides the feedback loop necessary for continuous improvement. It includes both normative inquiries (are we doing the right things?) and empirical inquiries (are we doing them effectively?), enabling ongoing policy adaptation.", quiz: [{ q: "What two types of inquiry does comprehensive evaluation in population health policy include?", options: ["Quantitative and qualitative methods", "Normative inquiries and empirical inquiries", "Internal audits and external benchmarking", "Process evaluation and outcome evaluation"], answer: 1, explanation: "The textbook distinguishes normative inquiries (are we doing the right things, aligned with equity values?) from empirical inquiries (are our interventions producing measurable outcomes?), both of which are required for comprehensive evaluation." }], caseStudy: { title: "Quality Metrics Without Equity Lens", context: "A health system reports strong HEDIS scores for preventive care. Leadership celebrates the results. However, no analysis has been conducted on whether these scores vary by race, income, or geography within the covered population.", prompts: ["What does this case reveal about the limits of aggregate metrics in population health evaluation?", "Design a brief evaluation framework that would surface equity-relevant patterns in this data.", "How does the normative/empirical distinction apply to assessing this program's success?"], externalSource: "NCQA HEDIS measures and their application to population health management" }, reflection: "Describe an evaluation framework you've encountered. Did it include both normative and empirical dimensions? What would a more comprehensive approach have included?" },
+  { id: 9, short: "Scientific Rigor", full: "Utilize Scientific Rigor", chapter: 10, color: "#40916C", description: "Population health policy leverages population health science as a system of values and disciplines — including clinical epidemiology, health services research, behavioral sciences, health economics, biostatistics, health law, and quality improvement.", quiz: [{ q: "According to Galea and Keyes, what does population health science represent?", options: ["A specific set of quantitative research methods", "A way of thinking rather than a particular set of questions or methods", "An epidemiological subdiscipline focused on chronic disease", "A regulatory framework for healthcare organizations"], answer: 1, explanation: "Galea and Keyes assert that population health science is a way of thinking — a systems-based orientation — not a fixed methodology, allowing professionals to adapt their approach to complex health challenges." }], caseStudy: { title: "Interpreting the SPRINT Trial for Policy", context: "The SPRINT Trial (2015) found that intensive blood pressure control significantly reduced cardiovascular events. A health system wants to adopt a policy mandating intensive control targets for all hypertensive patients.", prompts: ["What population health science disciplines would you draw on to evaluate whether this policy is appropriate for your specific patient population?", "How might patient demographics, social determinants, and healthcare access affect whether the SPRINT findings translate to your context?", "What does 'scientific rigor' require in translating a clinical trial into a population health policy?"], externalSource: "SPRINT Research Group (2015), New England Journal of Medicine — Intensive vs. Standard Blood Pressure Control" }, reflection: "Describe a policy you've encountered that was either supported or undermined by scientific evidence. How was that evidence used or misused in the policy development process?" },
+  { id: 10, short: "Securing Trust", full: "Secure Trust", chapter: 11, color: "#2D6A4F", description: "Trust is the bedrock of any successful health policy initiative, particularly among populations historically excluded or underserved. High-reliability organizational principles must be adopted to build and maintain trust, ensuring policies are seen as legitimate and fair.", quiz: [{ q: "Why is securing trust particularly critical for populations that have historically been excluded or underserved?", options: ["These populations are more likely to file legal complaints", "Historical exclusion creates justified skepticism about institutional motives and legitimacy, which must be actively addressed", "Trust is primarily a marketing concern for healthcare organizations", "Regulatory requirements mandate trust-building activities for these populations"], answer: 1, explanation: "The final principle recognizes that historically marginalized communities have rational grounds for distrusting health institutions. Securing trust requires demonstrated commitment to equity, transparency, and high-reliability organizational behavior — not merely stated intentions." }], caseStudy: { title: "COVID-19 Vaccine Hesitancy in Underserved Communities", context: "During COVID-19 vaccine rollout, a health system finds that uptake is significantly lower in predominantly Black and Latino neighborhoods they serve. Community members cite historical medical exploitation and distrust of institutional communications.", prompts: ["How does this case illustrate the culminating importance of Principle 10 in the 10-step framework?", "What high-reliability organizational practices would help rebuild trust in this context?", "Design two or three specific trust-building policy interventions that go beyond communication campaigns."], externalSource: "Evans & Bufka (2020), 'The Critical Need for a Population Health Approach' — behavioral health and COVID-19" }, reflection: "Describe an instance where institutional distrust affected health-seeking behavior or policy implementation. What would genuine trust-building require — and how is it different from public relations?" },
+];
+
+const INSTRUMENTS = [
+  { id: "strategy", short: "Strategy", full: "Population Health Strategy", color: "#1B4332", description: "A strategic plan facilitates alignment of different parts of an enterprise by identifying priority areas of focus and resource allocation. It is the foundational planning instrument preceding policy and action.", sections: [{ id: "s1", title: "Executive Summary", prompt: "Provide a concise overview of the population health challenge being addressed, the populations affected, and the strategic intent of this document. Reference relevant accreditation context (TJC, NCQA, CMS) where applicable." }, { id: "s2", title: "Population & Community Context", prompt: "Describe the patient population or community served. Include demographic characteristics, key health disparities identified, and relevant social determinants of health. Draw on CHNA data or equivalent needs assessment findings." }, { id: "s3", title: "Health Equity Commitment", prompt: "State explicitly how this strategy advances health equity (Principle 1). Define health equity as it will be operationalized in this strategy, and identify the specific gaps this strategy is designed to close." }, { id: "s4", title: "Strategic Priorities", prompt: "Identify 3–5 strategic priorities. For each priority, explain its connection to identified disparities and specify which foundational principles it activates. Avoid listing priorities that are not grounded in equity analysis." }, { id: "s5", title: "Cross-Functional Roles", prompt: "Identify the departments, roles, and community partners required to execute this strategy (Principle 2). Explain how collaboration will be structured and how diverse perspectives will be integrated into implementation." }, { id: "s6", title: "Continuum of Care Integration", prompt: "Describe how this strategy addresses multiple points along the care continuum — prevention, early detection, treatment, and rehabilitation (Principle 4). Identify any gaps in the continuum that the strategy will need to address." }, { id: "s7", title: "Social Determinants Approach", prompt: "Describe how the strategy will address health-related social needs (Principle 6). Identify specific social determinants, planned interventions, and community partnerships required." }, { id: "s8", title: "Evaluation Framework", prompt: "Define how the strategy's success will be measured (Principle 8). Include both normative metrics (are we pursuing equity?) and empirical metrics (are outcomes improving?). Specify data sources, reporting frequency, and accountability structures." }] },
+  { id: "policy", short: "Policy", full: "Population Health Policy Instrument", color: "#40916C", description: "A formal policy instrument establishes the rules and directives governing specific decisions. It must include a policy statement, purpose statement, scope, definitions, responsibilities, and procedures.", sections: [{ id: "p1", title: "Policy Statement", prompt: "Draft a policy statement that articulates the overarching value or principle governing this policy. This statement should capture the equity commitment and organizational stance in 2–4 sentences. It is the 'why we exist' of the policy." }, { id: "p2", title: "Purpose Statement", prompt: "Draft a purpose statement that defines clear equity-driven objectives, articulates the specific health equity goals, and specifies the context in which the policy will apply. Incorporate measurable aims where possible." }, { id: "p3", title: "Scope", prompt: "Define precisely which decisions, staff, departments, facilities, or patient populations fall within this policy's scope. Be specific — a scope that is too broad or too narrow can compromise accreditation and patient care." }, { id: "p4", title: "Definitions", prompt: "Define key terms used in this policy. Definitions must be consistent with your organization's broader policy framework. Include any terms that could be interpreted differently across departments or populations." }, { id: "p5", title: "Policy Section (Responsibilities)", prompt: "Articulate what specific issues this policy will resolve, and assign responsibilities to the organization and relevant departments. Be more granular than the purpose statement — who is responsible for what, and under what circumstances?" }, { id: "p6", title: "Procedures", prompt: "Provide step-by-step procedures that operationalize this policy. Procedures should be written by or in consultation with frontline staff who understand the hands-on process (as TJC recommends)." }, { id: "p7", title: "Equity Considerations", prompt: "Explicitly address how this policy will be applied equitably across diverse patient populations. Identify any provisions for customization (Principle 5) and any structural barriers the policy is designed to address." }, { id: "p8", title: "Review & Revision Protocol", prompt: "Specify how and when this policy will be reviewed, who is responsible for updates, and what triggers a revision (e.g., new accreditation standards, emerging evidence, identified inequities in implementation)." }] },
+  { id: "action", short: "Action Plan", full: "Population Health Action Plan", color: "#74C69D", description: "An action plan provides the operational roadmap: concrete steps, assigned responsibilities, timelines, and measurable outcomes. It bridges strategy and policy with day-to-day implementation.", sections: [{ id: "a1", title: "Action Plan Overview", prompt: "Summarize the population health challenge this action plan addresses, the policies and strategies it operationalizes, and the populations it will serve. State the time horizon and overall aim." }, { id: "a2", title: "Equity Goals & Baseline Metrics", prompt: "Define specific, measurable equity goals for this action plan. Establish baseline metrics from current data to enable meaningful progress tracking. What does success look like in 6, 12, and 24 months?" }, { id: "a3", title: "Action Items by Principle", prompt: "For each of the 10 principles relevant to this plan, identify at least one concrete action item. Action items should be specific, assigned to a named role, and time-bound. (Reference Chapter 12 action item framework.)" }, { id: "a4", title: "Cross-Functional Team Assignments", prompt: "List the team members or roles responsible for each component of the action plan. Include clinical, administrative, community health, and social services representatives. Define meeting cadence and decision-making authority." }, { id: "a5", title: "Social Needs Interventions", prompt: "Detail the specific programs, referrals, or partnerships that will address social determinants of health identified in the strategy. Include community organizations, eligibility criteria, and tracking mechanisms." }, { id: "a6", title: "Implementation Timeline", prompt: "Provide a phased timeline for implementation — immediate actions (0–90 days), short-term (90 days–1 year), and sustained operations (1–3 years). Flag dependencies between action items." }, { id: "a7", title: "Evaluation & Progress Tracking", prompt: "Define how progress on each action item will be monitored. Include quantitative indicators, qualitative assessments, and mechanisms for surfacing equity-relevant patterns. Who reviews data, and what triggers a course correction?" }, { id: "a8", title: "Trust-Building Measures", prompt: "Describe specific actions the organization will take to build or restore trust with the communities served by this plan (Principle 10). These should go beyond communications to include structural commitments and accountability mechanisms." }] },
+];
+
+// ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
+
+async function loadState(key) {
+  try {
+    const val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : null;
+  } catch { return null; }
+}
+async function saveState(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+// ─── ICONS ────────────────────────────────────────────────────────────────────
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="8" r="7" fill="#2D6A4F" />
+    <path d="M4.5 8l2.5 2.5L11.5 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const LockIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <rect x="2.5" y="6" width="9" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.2" />
+    <path d="M4.5 6V4.5a2.5 2.5 0 015 0V6" stroke="#94a3b8" strokeWidth="1.2" />
+  </svg>
+);
+
+// ─── BRIDGE MODULE VIEW ───────────────────────────────────────────────────────
+
+function BridgeExerciseCard({ exercise, savedData, onSave }) {
+  const [prediction, setPrediction] = useState(savedData?.prediction || null);
+  const [predictionSubmitted, setPredictionSubmitted] = useState(savedData?.predictionSubmitted || false);
+  const [analysisRevealed, setAnalysisRevealed] = useState(savedData?.analysisRevealed || false);
+  const [synthResponses, setSynthResponses] = useState(savedData?.synthResponses || {});
+  const [activeLayer, setActiveLayer] = useState("obvious");
+
+  const instrumentColor = { strategy: "#52B788", policy: "#74C69D", action: "#95D5B2" }[exercise.instrument];
+
+  const handleReveal = () => {
+    setAnalysisRevealed(true);
+    setActiveLayer("obvious");
+    onSave({ prediction, predictionSubmitted, analysisRevealed: true, synthResponses });
+  };
+
+  const handleSaveSynth = () => {
+    onSave({ prediction, predictionSubmitted, analysisRevealed, synthResponses });
+  };
+
+  const layerConfig = [
+    { id: "obvious", label: "Obvious Takeaway", icon: "◎", color: "#64748b" },
+    { id: "nuanced", label: "Nuanced Insight", icon: "◈", color: "#52B788" },
+    { id: "action", label: "Actionable Recommendation", icon: "◉", color: "#74C69D" },
+  ];
+
+  const layerContent = { obvious: exercise.analysis.obvious, nuanced: exercise.analysis.nuanced, action: exercise.analysis.action };
+
+  return (
+    <div style={{ fontFamily: "Georgia, serif", marginBottom: "2rem" }}>
+      {/* Exercise Header */}
+      <div style={{ background: "linear-gradient(135deg, #071626 0%, #0d2140 100%)", borderRadius: 12, padding: "1.5rem 2rem", marginBottom: "1.2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <span style={{ background: "rgba(255,255,255,0.08)", border: `1px solid ${instrumentColor}40`, borderRadius: 20, padding: "2px 12px", fontSize: 11, color: instrumentColor, letterSpacing: "0.08em" }}>
+            {exercise.subtitle}
+          </span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{exercise.chapters}</span>
+        </div>
+        <h3 style={{ color: "#f0fdf4", fontSize: "1.4rem", fontWeight: 400, margin: "0 0 0.5rem", fontStyle: "italic" }}>{exercise.title}</h3>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {exercise.principles.map(p => (
+            <span key={p} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(116,198,157,0.1)", color: "#74C69D", border: "1px solid rgba(116,198,157,0.2)" }}>{p}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Phase 1: Context */}
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: "1rem", overflow: "hidden" }}>
+        <div style={{ padding: "0.75rem 1.2rem", background: "rgba(14,158,140,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(14,158,140,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#52B788" }}>1</div>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#52B788" }}>Clinical Context</span>
+        </div>
+        <div style={{ padding: "1.2rem" }}>
+          <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.75, margin: "0 0 1rem", whiteSpace: "pre-line" }}>{exercise.context}</p>
+          {/* Data Table */}
+          <div style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ padding: "0.6rem 1rem", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <p style={{ color: "#64748b", fontSize: 11, fontWeight: 600, margin: 0, letterSpacing: "0.05em" }}>{exercise.dataTable.caption}</p>
+            </div>
+            {exercise.dataTable.rows.map((row, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "0.5rem 1rem", borderBottom: i < exercise.dataTable.rows.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                <span style={{ color: "#64748b", fontSize: 12, flex: 1, lineHeight: 1.4 }}>{row.category}</span>
+                <span style={{ color: row.color, fontSize: 12, fontWeight: 700, minWidth: 180, textAlign: "right" }}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Phase 2: Prediction */}
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: "1rem", overflow: "hidden" }}>
+        <div style={{ padding: "0.75rem 1.2rem", background: "rgba(212,142,26,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(212,142,26,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#d48e1a" }}>2</div>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#d48e1a" }}>Your Prediction</span>
+        </div>
+        <div style={{ padding: "1.2rem" }}>
+          <p style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600, lineHeight: 1.6, marginBottom: "1rem" }}>{exercise.prediction.question}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: "1rem" }}>
+            {exercise.prediction.options.map(opt => {
+              const isSelected = prediction === opt.value;
+              const isCorrect = predictionSubmitted && exercise.prediction.correct && opt.value === exercise.prediction.correct;
+              const isWrong = predictionSubmitted && exercise.prediction.correct && isSelected && opt.value !== exercise.prediction.correct;
+              let bg = "rgba(255,255,255,0.03)", border = "1px solid rgba(255,255,255,0.08)", color = "#64748b";
+              if (isCorrect) { bg = "rgba(45,106,79,0.25)"; border = "1px solid rgba(116,198,157,0.4)"; color = "#B7E4C7"; }
+              else if (isWrong) { bg = "rgba(201,64,64,0.15)"; border = "1px solid rgba(201,64,64,0.3)"; color = "#fca5a5"; }
+              else if (isSelected && !predictionSubmitted) { bg = "rgba(45,106,79,0.15)"; border = "1px solid rgba(116,198,157,0.3)"; color = "#e2e8f0"; }
+              return (
+                <button key={opt.value} onClick={() => { if (!predictionSubmitted) setPrediction(opt.value); }}
+                  style={{ background: bg, border, borderRadius: 8, padding: "0.75rem 1rem", textAlign: "left", cursor: predictionSubmitted ? "default" : "pointer", color, fontSize: 13, fontFamily: "Georgia, serif", lineHeight: 1.5, transition: "all 0.15s" }}>
+                  <strong style={{ marginRight: 8 }}>{opt.value}.</strong>{opt.text}
+                </button>
+              );
+            })}
+          </div>
+          {!predictionSubmitted && (
+            <button onClick={() => { if (prediction) { setPredictionSubmitted(true); onSave({ prediction, predictionSubmitted: true, analysisRevealed, synthResponses }); } }}
+              disabled={!prediction}
+              style={{ padding: "0.6rem 1.5rem", background: prediction ? "rgba(212,142,26,0.4)" : "rgba(255,255,255,0.04)", border: prediction ? "1px solid rgba(212,142,26,0.5)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 6, color: prediction ? "#f5d68a" : "#475569", cursor: prediction ? "pointer" : "not-allowed", fontFamily: "Georgia, serif", fontSize: 13 }}>
+              Submit Prediction
+            </button>
+          )}
+          {predictionSubmitted && exercise.prediction.correct === null && (
+            <p style={{ color: "#74C69D", fontSize: 12, lineHeight: 1.6, padding: "0.6rem 0.8rem", background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 6 }}>
+              Both B and C are defensible — this is intentional. The expert analysis will unpack the distinction.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Phase 3: Finding */}
+      {predictionSubmitted && (
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: "1rem", overflow: "hidden" }}>
+          <div style={{ padding: "0.75rem 1.2rem", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#94a3b8" }}>3</div>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94a3b8" }}>What the Data Shows</span>
+          </div>
+          <div style={{ padding: "1.2rem" }}>
+            <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.75, margin: 0 }}>{exercise.finding}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 4: Expert Analysis */}
+      {predictionSubmitted && !analysisRevealed && (
+        <div style={{ textAlign: "center", padding: "1.5rem", marginBottom: "1rem" }}>
+          <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6, marginBottom: "1rem" }}>
+            Before revealing the expert analysis — consider: what is the single most important policy implication of what you've seen?
+          </p>
+          <button onClick={handleReveal}
+            style={{ padding: "0.75rem 2rem", background: "linear-gradient(135deg, #1B4332, #2D6A4F)", border: "1px solid rgba(116,198,157,0.4)", borderRadius: 8, color: "#B7E4C7", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 14 }}>
+            Reveal Expert Analysis ↓
+          </button>
+        </div>
+      )}
+
+      {analysisRevealed && (
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, marginBottom: "1rem", overflow: "hidden" }}>
+          <div style={{ padding: "0.75rem 1.2rem", background: "rgba(24,167,111,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(24,167,111,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#52B788" }}>4</div>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#52B788" }}>Expert Analysis</span>
+          </div>
+          {/* Layer tabs */}
+          <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            {layerConfig.map(layer => (
+              <button key={layer.id} onClick={() => setActiveLayer(layer.id)}
+                style={{ flex: 1, padding: "0.6rem", background: activeLayer === layer.id ? "rgba(45,106,79,0.2)" : "transparent", border: "none", borderBottom: activeLayer === layer.id ? "2px solid #52B788" : "2px solid transparent", color: activeLayer === layer.id ? "#B7E4C7" : "#475569", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                <span>{layer.icon}</span><span>{layer.label}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: "1.2rem" }}>
+            <p style={{ color: "#e2e8f0", fontSize: 13, lineHeight: 1.8, margin: 0 }}>{layerContent[activeLayer]}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Synthesis */}
+      {analysisRevealed && (
+        <div style={{ background: "rgba(45,106,79,0.08)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 10, padding: "1.2rem" }}>
+          <p style={{ color: "#74C69D", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+            ◈ Synthesis — Toward Your {exercise.instrumentLabel}
+          </p>
+          <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.65, marginBottom: "1rem" }}>{exercise.synthesis.prompt}</p>
+          {exercise.synthesis.sections.map((section, i) => (
+            <div key={i} style={{ marginBottom: "0.8rem" }}>
+              <p style={{ color: "#B7E4C7", fontSize: 12, marginBottom: "0.4rem", lineHeight: 1.5 }}>{i + 1}. {section}</p>
+              <textarea
+                value={synthResponses[i] || ""}
+                onChange={e => setSynthResponses({ ...synthResponses, [i]: e.target.value })}
+                onBlur={handleSaveSynth}
+                placeholder="Your response..."
+                style={{ width: "100%", minHeight: 80, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "0.7rem", color: "#e2e8f0", fontSize: 12, fontFamily: "Georgia, serif", lineHeight: 1.6, resize: "vertical", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BridgeModuleView({ savedData, onSave, onComplete }) {
+  const [activeExercise, setActiveExercise] = useState(0);
+  const [declarations, setDeclarations] = useState(savedData?.declarations || {});
+  const [declSaved, setDeclSaved] = useState(false);
+
+  const exerciseData = BRIDGE_EXERCISES.map((ex, i) => savedData?.exercises?.[i] || {});
+
+  const allRevealed = BRIDGE_EXERCISES.every((_, i) => savedData?.exercises?.[i]?.analysisRevealed);
+  const allDeclared = INSTRUMENTS.every(inst => (declarations[inst.id] || "").trim().length > 40);
+  const bridgeComplete = allRevealed && allDeclared;
+
+  const handleSaveExercise = (idx, data) => {
+    const newExercises = [...(savedData?.exercises || [{}, {}, {}])];
+    newExercises[idx] = data;
+    onSave({ ...savedData, exercises: newExercises, declarations });
+  };
+
+  const handleSaveDeclarations = () => {
+    onSave({ ...savedData, declarations });
+    setDeclSaved(true);
+    setTimeout(() => setDeclSaved(false), 2000);
+  };
+
+  const completedExercises = BRIDGE_EXERCISES.filter((_, i) => savedData?.exercises?.[i]?.analysisRevealed).length;
+
+  return (
+    <div style={{ fontFamily: "Georgia, serif" }}>
+      {/* Bridge Header */}
+      <div style={{ marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <span style={{ background: "rgba(116,198,157,0.15)", border: "1px solid rgba(116,198,157,0.3)", borderRadius: 20, padding: "2px 12px", fontSize: 11, color: "#74C69D", letterSpacing: "0.08em" }}>
+            Bridge Module · {completedExercises}/3 exercises complete
+          </span>
+        </div>
+        <h2 style={{ color: "#f0fdf4", fontSize: "1.7rem", fontWeight: 400, margin: "0 0 0.75rem", lineHeight: 1.2 }}>
+          From Evidence to Instrument
+        </h2>
+        <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.75, maxWidth: 680, margin: 0 }}>
+          You have built the conceptual vocabulary. Now encounter what failure looks like in practice. Each exercise presents a real governance breakdown — drawn from the textbook's own cases — and asks you to move through evidence to expert analysis to the specific commitments you will carry into your policy instruments.
+        </p>
+        {/* Progress bar */}
+        <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginTop: "1.2rem", maxWidth: 400 }}>
+          <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #2D6A4F, #74C69D)", width: `${(completedExercises / 3) * 100}%`, transition: "width 0.5s" }} />
+        </div>
+      </div>
+
+      {/* Exercise Nav */}
+      <div style={{ display: "flex", gap: 8, marginBottom: "1.5rem" }}>
+        {BRIDGE_EXERCISES.map((ex, i) => {
+          const done = savedData?.exercises?.[i]?.analysisRevealed;
+          const isActive = activeExercise === i;
+          const instColor = { strategy: "#52B788", policy: "#74C69D", action: "#95D5B2" }[ex.instrument];
+          return (
+            <button key={ex.id} onClick={() => setActiveExercise(i)}
+              style={{ flex: 1, padding: "0.75rem", borderRadius: 8, cursor: "pointer", fontFamily: "Georgia, serif", textAlign: "left", background: isActive ? "rgba(45,106,79,0.2)" : "rgba(255,255,255,0.03)", border: isActive ? `1px solid ${instColor}60` : "1px solid rgba(255,255,255,0.07)", transition: "all 0.15s" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                <span style={{ fontSize: 11, color: done ? "#52B788" : "#334155" }}>{done ? "✓" : "○"}</span>
+                <span style={{ fontSize: 10, color: instColor, fontWeight: 700, letterSpacing: "0.06em" }}>{ex.id}</span>
+              </div>
+              <div style={{ color: isActive ? "#e2e8f0" : "#64748b", fontSize: 12, lineHeight: 1.4 }}>{ex.instrumentLabel}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active Exercise */}
+      <BridgeExerciseCard
+        key={activeExercise}
+        exercise={BRIDGE_EXERCISES[activeExercise]}
+        savedData={exerciseData[activeExercise]}
+        onSave={(data) => handleSaveExercise(activeExercise, data)}
+      />
+
+      {/* Next exercise nav */}
+      {activeExercise < 2 && savedData?.exercises?.[activeExercise]?.analysisRevealed && (
+        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <button onClick={() => setActiveExercise(activeExercise + 1)}
+            style={{ padding: "0.7rem 2rem", background: "rgba(45,106,79,0.25)", border: "1px solid rgba(116,198,157,0.3)", borderRadius: 8, color: "#74C69D", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 13 }}>
+            Continue to Exercise {BRIDGE_EXERCISES[activeExercise + 1].id} →
+          </button>
+        </div>
+      )}
+
+      {/* Instrument Readiness Declaration */}
+      {allRevealed && (
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "1.5rem", marginTop: "1.5rem" }}>
+          <p style={{ color: "#74C69D", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.5rem" }}>◉ Instrument Readiness Declaration</p>
+          <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.7, marginBottom: "1.5rem", maxWidth: 620 }}>
+            Before entering the drafting instruments, state one specific commitment — drawn from the bridge exercises — that you will carry into each instrument. These are not aspirations; they are the direct consequence of what you've seen in the evidence.
+          </p>
+          {INSTRUMENTS.map((inst, i) => {
+            const bridgeEx = BRIDGE_EXERCISES.find(ex => ex.instrument === inst.id);
+            return (
+              <div key={inst.id} style={{ marginBottom: "1.2rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "0.5rem" }}>
+                  <span style={{ fontSize: 13, color: "#52B788", fontWeight: 600 }}>{inst.full}</span>
+                  <span style={{ fontSize: 11, color: "#334155" }}>← informed by Exercise {bridgeEx?.id}</span>
+                </div>
+                <textarea
+                  value={declarations[inst.id] || ""}
+                  onChange={e => setDeclarations({ ...declarations, [inst.id]: e.target.value })}
+                  placeholder={`Because of what Exercise ${bridgeEx?.id} revealed, when I draft my ${inst.short}, I commit to...`}
+                  style={{ width: "100%", minHeight: 90, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "0.8rem 1rem", color: "#e2e8f0", fontSize: 13, fontFamily: "Georgia, serif", lineHeight: 1.65, resize: "vertical", outline: "none", boxSizing: "border-box" }}
+                />
+                {(declarations[inst.id] || "").trim().length > 40 && (
+                  <p style={{ color: "#52B788", fontSize: 11, marginTop: 4 }}>✓ Declaration recorded</p>
+                )}
+              </div>
+            );
+          })}
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: "1rem" }}>
+            <button onClick={handleSaveDeclarations}
+              style={{ padding: "0.6rem 1.5rem", background: declSaved ? "rgba(45,106,79,0.5)" : "rgba(255,255,255,0.06)", border: declSaved ? "1px solid rgba(116,198,157,0.5)" : "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: declSaved ? "#B7E4C7" : "#94a3b8", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 13, transition: "all 0.2s" }}>
+              {declSaved ? "✓ Saved" : "Save Declarations"}
+            </button>
+            {bridgeComplete && (
+              <button onClick={onComplete}
+                style={{ padding: "0.7rem 2rem", background: "linear-gradient(135deg, #1B4332, #2D6A4F)", border: "1px solid rgba(116,198,157,0.5)", borderRadius: 8, color: "#B7E4C7", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 14, fontWeight: 600 }}>
+                Enter Policy Drafting → 
+              </button>
+            )}
+          </div>
+          {allRevealed && !allDeclared && (
+            <p style={{ color: "#475569", fontSize: 11, marginTop: 8 }}>Complete all three declarations (40+ characters each) to unlock the policy instruments.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ORIENTATION SCREEN ───────────────────────────────────────────────────────
+
+function OrientationScreen({ onBegin }) {
+  const [mode, setMode] = useState(null);
+  const [name, setName] = useState("");
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #0a2218 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Georgia', serif", padding: "2rem" }}>
+      <div style={{ maxWidth: 680, width: "100%" }}>
+        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+          <div style={{ display: "inline-block", background: "rgba(45,106,79,0.2)", border: "1px solid rgba(45,106,79,0.4)", borderRadius: 4, padding: "0.35rem 1rem", marginBottom: "1.5rem", fontSize: 11, letterSpacing: "0.15em", color: "#74C69D", textTransform: "uppercase" }}>
+            Bhattacharya · Population Health Policy
+          </div>
+          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", color: "#f0fdf4", fontWeight: 400, lineHeight: 1.2, margin: "0 0 1rem" }}>
+            A Journey Through<br /><span style={{ color: "#74C69D", fontStyle: "italic" }}>Purposeful Policy</span>
+          </h1>
+          <p style={{ color: "#94a3b8", fontSize: "1.05rem", lineHeight: 1.7, maxWidth: 520, margin: "0 auto" }}>
+            Ten foundational principles. A bridge through evidence. Three policy instruments. This platform guides you from conceptual grounding to practical production — the complete arc of population health policy design.
+          </p>
+        </div>
+
+        {/* Journey Map */}
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "1.5rem", marginBottom: "2rem" }}>
+          <p style={{ color: "#74C69D", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 1rem" }}>Your Learning Path</p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ background: "rgba(45,106,79,0.2)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "#B7E4C7" }}>10 Principles</div>
+            <span style={{ color: "#334155" }}>→</span>
+            <div style={{ background: "rgba(116,198,157,0.15)", border: "1px solid rgba(116,198,157,0.4)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "#74C69D", fontWeight: 700 }}>Bridge: Evidence → Instruments</div>
+            <span style={{ color: "#334155" }}>→</span>
+            <div style={{ background: "rgba(27,67,50,0.4)", border: "1px solid rgba(116,198,157,0.4)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "#52B788" }}>Strategy</div>
+            <span style={{ color: "#334155" }}>→</span>
+            <div style={{ background: "rgba(27,67,50,0.4)", border: "1px solid rgba(116,198,157,0.4)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "#52B788" }}>Policy</div>
+            <span style={{ color: "#334155" }}>→</span>
+            <div style={{ background: "rgba(27,67,50,0.4)", border: "1px solid rgba(116,198,157,0.4)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "#52B788" }}>Action Plan</div>
+          </div>
+          <p style={{ color: "#64748b", fontSize: 12, margin: "1rem 0 0", lineHeight: 1.6 }}>The Bridge module becomes available after all 10 principles are completed. It connects evidence of governance failure directly to the instruments you will draft — ensuring your policy work is grounded in consequence, not only concept.</p>
+        </div>
+
+        {/* Assessment types */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: "2rem" }}>
+          {[{ icon: "◈", label: "Knowledge Quizzes", desc: "Comprehension grounded in the textbook" }, { icon: "◇", label: "Case Analysis", desc: "Textbook + applied scenarios" }, { icon: "◉", label: "Reflective Journal", desc: "Metacognitive deepening" }].map(item => (
+            <div key={item.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "1rem", textAlign: "center" }}>
+              <div style={{ fontSize: 22, marginBottom: 8, color: "#52B788" }}>{item.icon}</div>
+              <div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{item.label}</div>
+              <div style={{ color: "#64748b", fontSize: 11, lineHeight: 1.5 }}>{item.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Name + Mode */}
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "1.5rem", marginBottom: "1.5rem" }}>
+          <p style={{ color: "#74C69D", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 1rem" }}>Before You Begin</p>
+          <div style={{ marginBottom: "1.2rem" }}>
+            <label style={{ color: "#94a3b8", fontSize: 13, display: "block", marginBottom: 8 }}>Your name (for your portfolio)</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name..."
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, padding: "0.6rem 1rem", color: "#f0fdf4", fontSize: 14, width: "100%", outline: "none", fontFamily: "Georgia, serif", boxSizing: "border-box" }} />
+          </div>
+          <div>
+            <label style={{ color: "#94a3b8", fontSize: 13, display: "block", marginBottom: 8 }}>Working mode</label>
+            <div style={{ display: "flex", gap: 10 }}>
+              {["Individual", "Group"].map(m => (
+                <button key={m} onClick={() => setMode(m)}
+                  style={{ flex: 1, padding: "0.7rem", borderRadius: 8, cursor: "pointer", fontFamily: "Georgia, serif", background: mode === m ? "rgba(45,106,79,0.4)" : "rgba(255,255,255,0.04)", border: mode === m ? "1px solid rgba(116,198,157,0.6)" : "1px solid rgba(255,255,255,0.1)", color: mode === m ? "#B7E4C7" : "#64748b", fontSize: 14, transition: "all 0.2s" }}>{m}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <button onClick={() => { if (name.trim() && mode) onBegin(name.trim(), mode); }} disabled={!name.trim() || !mode}
+          style={{ width: "100%", padding: "1rem", borderRadius: 8, cursor: name && mode ? "pointer" : "not-allowed", background: name && mode ? "linear-gradient(135deg, #2D6A4F, #40916C)" : "rgba(255,255,255,0.05)", border: "none", color: name && mode ? "#f0fdf4" : "#475569", fontSize: 16, fontFamily: "Georgia, serif", letterSpacing: "0.03em", transition: "all 0.3s" }}>
+          Begin the Journey →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── QUIZ COMPONENT ───────────────────────────────────────────────────────────
+
+function QuizSection({ questions, savedAnswers, onComplete }) {
+  const [answers, setAnswers] = useState(savedAnswers || {});
+  const [submitted, setSubmitted] = useState(Object.keys(savedAnswers || {}).length === questions.length);
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+    const score = questions.filter((q, i) => answers[i] === q.answer).length;
+    onComplete({ answers, score, total: questions.length });
+  };
+
+  return (
+    <div>
+      {questions.map((q, qi) => (
+        <div key={qi} style={{ marginBottom: "1.5rem" }}>
+          <p style={{ color: "#e2e8f0", fontSize: 14, lineHeight: 1.6, marginBottom: "0.8rem" }}>
+            <strong style={{ color: "#74C69D" }}>Q{qi + 1}.</strong> {q.q}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {q.options.map((opt, oi) => {
+              let bg = "rgba(255,255,255,0.04)", border = "1px solid rgba(255,255,255,0.1)", color = "#94a3b8";
+              if (submitted) {
+                if (oi === q.answer) { bg = "rgba(45,106,79,0.3)"; border = "1px solid rgba(116,198,157,0.5)"; color = "#B7E4C7"; }
+                else if (answers[qi] === oi && oi !== q.answer) { bg = "rgba(185,28,28,0.2)"; border = "1px solid rgba(252,165,165,0.4)"; color = "#fca5a5"; }
+              } else if (answers[qi] === oi) { bg = "rgba(45,106,79,0.2)"; border = "1px solid rgba(116,198,157,0.4)"; color = "#f0fdf4"; }
+              return (
+                <button key={oi} onClick={() => { if (!submitted) setAnswers({ ...answers, [qi]: oi }); }}
+                  style={{ background: bg, border, borderRadius: 6, padding: "0.6rem 1rem", textAlign: "left", cursor: submitted ? "default" : "pointer", color, fontSize: 13, fontFamily: "Georgia, serif", transition: "all 0.2s", lineHeight: 1.5 }}>
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+          {submitted && (
+            <div style={{ marginTop: 10, padding: "0.7rem 1rem", background: "rgba(45,106,79,0.15)", borderLeft: "3px solid #52B788", borderRadius: "0 6px 6px 0" }}>
+              <p style={{ color: "#B7E4C7", fontSize: 12, lineHeight: 1.6, margin: 0 }}><strong>Explanation:</strong> {q.explanation}</p>
+            </div>
+          )}
+        </div>
+      ))}
+      {!submitted && (
+        <button onClick={handleSubmit} disabled={!questions.every((_, i) => answers[i] !== undefined)}
+          style={{ padding: "0.6rem 1.5rem", background: questions.every((_, i) => answers[i] !== undefined) ? "rgba(45,106,79,0.5)" : "rgba(255,255,255,0.05)", border: "1px solid rgba(116,198,157,0.5)", borderRadius: 6, color: "#B7E4C7", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 13 }}>
+          Submit Answers
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── PRINCIPLE VIEW ───────────────────────────────────────────────────────────
+
+function PrincipleView({ principle, savedData, onSave }) {
+  const [tab, setTab] = useState("overview");
+  const [caseResponse, setCaseResponse] = useState(savedData?.caseResponse || "");
+  const [reflection, setReflection] = useState(savedData?.reflection || "");
+  const [quizData, setQuizData] = useState(savedData?.quiz || null);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => { onSave({ caseResponse, reflection, quiz: quizData }); setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
+  const ACTION_ITEMS = ["Conduct a thorough assessment of existing health disparities. Establish baseline metrics and set clear, measurable equity goals. Engage stakeholders from marginalized communities.", "Assemble a cross-functional team including representatives from all relevant departments. Establish regular meetings and collaborative working groups.", "Develop a formal policy document outlining specific objectives related to population health and health equity, aligned with organizational goals.", "Create a continuum of care plan covering prevention, early detection, treatment, and rehabilitation with equity in mind at every stage.", "Develop standardized protocols for care that can be adapted to meet the needs of diverse patient populations, ensuring consistency while allowing customization.", "Implement programs that address social determinants of health. Partner with community organizations and other sectors to create networks of support.", "Integrate population health policies into daily clinical operations. Train clinical staff on health equity principles and the integration of social and clinical care.", "Establish a robust evaluation framework including both normative and empirical inquiries to identify what works, what needs adjustment, and where new strategies are required.", "Leverage clinical epidemiology, health services research, health economics, biostatistics, health law, and quality improvement disciplines to ground policies in evidence.", "Adopt high-reliability organizational principles to build and maintain trust. Ensure policies are not only effective but seen as legitimate and fair by those they serve."];
+
+  return (
+    <div style={{ fontFamily: "Georgia, serif" }}>
+      <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <span style={{ background: "rgba(45,106,79,0.25)", border: "1px solid rgba(116,198,157,0.3)", borderRadius: 20, padding: "2px 12px", fontSize: 12, color: "#74C69D" }}>Principle {principle.id} · Chapter {principle.chapter}</span>
+        </div>
+        <h2 style={{ color: "#f0fdf4", fontSize: "1.6rem", fontWeight: 400, margin: "0 0 0.5rem" }}>{principle.full}</h2>
+        <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{principle.description}</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 4, marginBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        {["overview", "quiz", "case", "reflect"].map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            style={{ padding: "0.5rem 1rem", background: "none", border: "none", borderBottom: tab === t ? "2px solid #52B788" : "2px solid transparent", color: tab === t ? "#74C69D" : "#64748b", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 13, textTransform: "capitalize", transition: "all 0.2s", marginBottom: -1 }}>
+            {t === "case" ? "Case Study" : t === "reflect" ? "Reflection" : t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" && (
+        <div>
+          <div style={{ background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 8, padding: "1.2rem", marginBottom: "1rem" }}>
+            <p style={{ color: "#B7E4C7", fontSize: 13, fontWeight: 600, margin: "0 0 0.5rem", letterSpacing: "0.05em" }}>CORE INSIGHT</p>
+            <p style={{ color: "#e2e8f0", fontSize: 14, lineHeight: 1.7, margin: 0 }}>{principle.description}</p>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "1.2rem" }}>
+            <p style={{ color: "#74C69D", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.8rem" }}>Action Item (Chapter 12 Framework)</p>
+            <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.7, margin: 0 }}>{ACTION_ITEMS[principle.id - 1]}</p>
+          </div>
+          <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+            {[{ label: "→ Take Quiz", target: "quiz" }, { label: "→ Analyze Case", target: "case" }, { label: "→ Reflect", target: "reflect" }].map(btn => (
+              <button key={btn.target} onClick={() => setTab(btn.target)}
+                style={{ padding: "0.5rem 1rem", background: "rgba(45,106,79,0.2)", border: "1px solid rgba(116,198,157,0.3)", borderRadius: 6, color: "#74C69D", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 12 }}>{btn.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === "quiz" && (
+        <div>
+          <p style={{ color: "#64748b", fontSize: 12, marginBottom: "1rem", lineHeight: 1.6 }}>Comprehension checks grounded in the textbook's treatment of this principle.</p>
+          <QuizSection questions={principle.quiz} savedAnswers={quizData?.answers} onComplete={(data) => setQuizData(data)} />
+          {quizData && (
+            <div style={{ marginTop: "1rem", padding: "0.8rem 1rem", background: "rgba(45,106,79,0.2)", border: "1px solid rgba(116,198,157,0.3)", borderRadius: 6 }}>
+              <p style={{ color: "#B7E4C7", margin: 0, fontSize: 13 }}>Score: {quizData.score}/{quizData.total} — {quizData.score === quizData.total ? "Excellent mastery." : "Review the explanations above."}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "case" && (
+        <div>
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "1.2rem", marginBottom: "1.2rem" }}>
+            <p style={{ color: "#74C69D", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Case Study · {principle.caseStudy.title}</p>
+            <p style={{ color: "#e2e8f0", fontSize: 13, lineHeight: 1.7, margin: "0 0 1rem" }}>{principle.caseStudy.context}</p>
+            <p style={{ color: "#64748b", fontSize: 11, margin: 0 }}>External reference: {principle.caseStudy.externalSource}</p>
+          </div>
+          <div style={{ marginBottom: "1rem" }}>
+            {principle.caseStudy.prompts.map((prompt, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, padding: "0.7rem 0", borderBottom: i < principle.caseStudy.prompts.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                <span style={{ color: "#52B788", fontSize: 13, minWidth: 20 }}>{i + 1}.</span>
+                <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{prompt}</p>
+              </div>
+            ))}
+          </div>
+          <textarea value={caseResponse} onChange={e => setCaseResponse(e.target.value)} placeholder="Write your case analysis here..."
+            style={{ width: "100%", minHeight: 200, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "1rem", color: "#e2e8f0", fontSize: 13, fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+        </div>
+      )}
+
+      {tab === "reflect" && (
+        <div>
+          <div style={{ background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 8, padding: "1.2rem", marginBottom: "1.2rem" }}>
+            <p style={{ color: "#B7E4C7", fontSize: 14, lineHeight: 1.7, margin: 0, fontStyle: "italic" }}>"{principle.reflection}"</p>
+          </div>
+          <textarea value={reflection} onChange={e => setReflection(e.target.value)} placeholder="Your reflection..."
+            style={{ width: "100%", minHeight: 220, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "1rem", color: "#e2e8f0", fontSize: 13, fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+        </div>
+      )}
+
+      {(tab === "case" || tab === "reflect" || (tab === "quiz" && quizData)) && (
+        <button onClick={handleSave}
+          style={{ marginTop: "1rem", padding: "0.6rem 1.5rem", background: saved ? "rgba(45,106,79,0.5)" : "rgba(255,255,255,0.06)", border: saved ? "1px solid rgba(116,198,157,0.5)" : "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: saved ? "#B7E4C7" : "#94a3b8", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 13, transition: "all 0.2s" }}>
+          {saved ? "✓ Saved to Portfolio" : "Save Progress"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── INSTRUMENT VIEW ──────────────────────────────────────────────────────────
+
+function InstrumentView({ instrument, savedData, onSave, bridgeDeclaration }) {
+  const [activeSection, setActiveSection] = useState(instrument.sections[0].id);
+  const [drafts, setDrafts] = useState(savedData?.drafts || {});
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => { onSave({ drafts }); setSaved(true); setTimeout(() => setSaved(false), 2000); };
+  const completedSections = instrument.sections.filter(s => (drafts[s.id] || "").trim().length > 50).length;
+
+  return (
+    <div style={{ fontFamily: "Georgia, serif" }}>
+      <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <span style={{ background: "rgba(27,67,50,0.4)", border: "1px solid rgba(116,198,157,0.4)", borderRadius: 20, padding: "2px 12px", fontSize: 12, color: "#74C69D" }}>Policy Instrument · {completedSections}/{instrument.sections.length} sections drafted</span>
+        </div>
+        <h2 style={{ color: "#f0fdf4", fontSize: "1.6rem", fontWeight: 400, margin: "0 0 0.5rem" }}>{instrument.full}</h2>
+        <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{instrument.description}</p>
+      </div>
+
+      {/* Bridge Declaration reminder */}
+      {bridgeDeclaration && (
+        <div style={{ background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.25)", borderRadius: 8, padding: "0.9rem 1.1rem", marginBottom: "1.2rem", display: "flex", gap: 10 }}>
+          <span style={{ color: "#52B788", fontSize: 14, flexShrink: 0 }}>◈</span>
+          <div>
+            <p style={{ color: "#74C69D", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 3px" }}>Your Bridge Declaration</p>
+            <p style={{ color: "#B7E4C7", fontSize: 12, lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>{bridgeDeclaration}</p>
+          </div>
+        </div>
+      )}
+
+      <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, marginBottom: "1.5rem" }}>
+        <div style={{ height: "100%", borderRadius: 2, transition: "width 0.5s", background: "linear-gradient(90deg, #2D6A4F, #74C69D)", width: `${(completedSections / instrument.sections.length) * 100}%` }} />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: "1.5rem" }}>
+        <div>
+          {instrument.sections.map((s) => {
+            const isDone = (drafts[s.id] || "").trim().length > 50;
+            const isActive = activeSection === s.id;
+            return (
+              <button key={s.id} onClick={() => setActiveSection(s.id)}
+                style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "0.6rem 0.8rem", background: isActive ? "rgba(45,106,79,0.25)" : "transparent", border: isActive ? "1px solid rgba(116,198,157,0.3)" : "1px solid transparent", borderRadius: 6, cursor: "pointer", textAlign: "left", marginBottom: 4, transition: "all 0.15s" }}>
+                <span style={{ flexShrink: 0 }}>{isDone ? <CheckIcon /> : <div style={{ width: 16, height: 16, borderRadius: "50%", border: "1.5px solid #334155" }} />}</span>
+                <span style={{ color: isActive ? "#B7E4C7" : "#64748b", fontSize: 12, fontFamily: "Georgia, serif", lineHeight: 1.4 }}>{s.title}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div>
+          {instrument.sections.filter(s => s.id === activeSection).map(section => (
+            <div key={section.id}>
+              <h3 style={{ color: "#e2e8f0", fontSize: "1rem", fontWeight: 600, margin: "0 0 0.8rem" }}>{section.title}</h3>
+              <div style={{ background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 6, padding: "0.9rem", marginBottom: "1rem" }}>
+                <p style={{ color: "#B7E4C7", fontSize: 12, lineHeight: 1.7, margin: 0 }}><strong>Drafting Guidance:</strong> {section.prompt}</p>
+              </div>
+              <textarea value={drafts[section.id] || ""} onChange={e => setDrafts({ ...drafts, [section.id]: e.target.value })} placeholder={`Draft your ${section.title} here...`}
+                style={{ width: "100%", minHeight: 240, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "1rem", color: "#e2e8f0", fontSize: 13, fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                <span style={{ color: "#475569", fontSize: 11 }}>{(drafts[section.id] || "").trim().length > 50 ? "✓ Section meets minimum length" : "Draft at least 50 characters to mark complete"}</span>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {instrument.sections.findIndex(s => s.id === activeSection) < instrument.sections.length - 1 && (
+                    <button onClick={() => { const idx = instrument.sections.findIndex(s => s.id === activeSection); setActiveSection(instrument.sections[idx + 1].id); }}
+                      style={{ padding: "0.5rem 1rem", background: "rgba(45,106,79,0.2)", border: "1px solid rgba(116,198,157,0.3)", borderRadius: 6, color: "#74C69D", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 12 }}>Next Section →</button>
+                  )}
+                  <button onClick={handleSave}
+                    style={{ padding: "0.5rem 1rem", background: saved ? "rgba(45,106,79,0.5)" : "rgba(255,255,255,0.06)", border: saved ? "1px solid rgba(116,198,157,0.5)" : "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: saved ? "#B7E4C7" : "#94a3b8", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 12, transition: "all 0.2s" }}>
+                    {saved ? "✓ Saved" : "Save Draft"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PORTFOLIO VIEW ───────────────────────────────────────────────────────────
+
+function PortfolioView({ studentName, progress, portfolioData }) {
+  const completedPrinciples = Object.keys(progress.principles || {}).length;
+  const bridgeDone = progress.bridgeComplete || false;
+  const completedInstruments = INSTRUMENTS.filter(inst => Object.keys((portfolioData[`inst_${inst.id}`]?.drafts) || {}).filter(k => ((portfolioData[`inst_${inst.id}`]?.drafts || {})[k] || "").trim().length > 50).length >= 3).length;
+  const totalSteps = 10 + 1 + 3;
+  const completed = completedPrinciples + (bridgeDone ? 1 : 0) + completedInstruments;
+
+  return (
+    <div style={{ fontFamily: "Georgia, serif" }}>
+      <h2 style={{ color: "#f0fdf4", fontSize: "1.4rem", fontWeight: 400, margin: "0 0 1.5rem" }}>Portfolio — {studentName}</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: "1.5rem" }}>
+        {[
+          { label: "Principles", value: `${completedPrinciples}/10` },
+          { label: "Bridge", value: bridgeDone ? "Complete" : "In Progress" },
+          { label: "Instruments", value: `${completedInstruments}/3` },
+          { label: "Overall", value: `${Math.round((completed / totalSteps) * 100)}%` },
+        ].map(stat => (
+          <div key={stat.label} style={{ background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 8, padding: "1rem", textAlign: "center" }}>
+            <div style={{ color: "#74C69D", fontSize: "1.4rem", fontWeight: 300, marginBottom: 4 }}>{stat.value}</div>
+            <div style={{ color: "#e2e8f0", fontSize: 12 }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Principles grid */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <p style={{ color: "#74C69D", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.8rem" }}>Principles Engagement</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+          {PRINCIPLES.map(p => {
+            const data = portfolioData[`principle_${p.id}`];
+            const hasQuiz = data?.quiz?.score !== undefined;
+            const hasCase = (data?.caseResponse || "").trim().length > 30;
+            const hasReflect = (data?.reflection || "").trim().length > 30;
+            const completed = hasQuiz && hasCase && hasReflect;
+            const partial = hasQuiz || hasCase || hasReflect;
+            return (
+              <div key={p.id} style={{ background: completed ? "rgba(45,106,79,0.25)" : partial ? "rgba(45,106,79,0.1)" : "rgba(255,255,255,0.03)", border: completed ? "1px solid rgba(116,198,157,0.4)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 6, padding: "0.7rem", textAlign: "center" }}>
+                <div style={{ color: completed ? "#74C69D" : partial ? "#52B788" : "#334155", fontSize: 18, marginBottom: 4 }}>{completed ? "✓" : partial ? "◑" : "○"}</div>
+                <div style={{ color: completed ? "#B7E4C7" : "#64748b", fontSize: 10, lineHeight: 1.4 }}>{p.short}</div>
+                {hasQuiz && <div style={{ color: "#52B788", fontSize: 10, marginTop: 3 }}>{data.quiz.score}/{data.quiz.total}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Bridge status */}
+      <div style={{ marginBottom: "1.5rem", background: bridgeDone ? "rgba(45,106,79,0.15)" : "rgba(255,255,255,0.03)", border: bridgeDone ? "1px solid rgba(116,198,157,0.3)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "1rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: bridgeDone ? 8 : 0 }}>
+          <span style={{ color: "#e2e8f0", fontSize: 14 }}>Bridge Module — From Evidence to Instrument</span>
+          <span style={{ color: bridgeDone ? "#52B788" : "#475569", fontSize: 12 }}>{bridgeDone ? "✓ Complete" : "In Progress"}</span>
+        </div>
+        {bridgeDone && portfolioData.bridge?.declarations && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+            {INSTRUMENTS.map(inst => (
+              <div key={inst.id} style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
+                <strong style={{ color: "#74C69D" }}>{inst.short}:</strong> {(portfolioData.bridge?.declarations?.[inst.id] || "").substring(0, 80)}{(portfolioData.bridge?.declarations?.[inst.id] || "").length > 80 ? "…" : ""}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Instruments */}
+      <div>
+        <p style={{ color: "#74C69D", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.8rem" }}>Policy Instruments</p>
+        {INSTRUMENTS.map(inst => {
+          const data = portfolioData[`inst_${inst.id}`];
+          const draftedSections = Object.keys(data?.drafts || {}).filter(k => (data.drafts[k] || "").trim().length > 50).length;
+          return (
+            <div key={inst.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "1rem", marginBottom: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ color: "#e2e8f0", fontSize: 14 }}>{inst.full}</span>
+                <span style={{ color: "#52B788", fontSize: 12 }}>{draftedSections}/{inst.sections.length} sections</span>
+              </div>
+              <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #2D6A4F, #74C69D)", width: `${(draftedSections / inst.sections.length) * 100}%`, transition: "width 0.5s" }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+
+function App() {
+  const [phase, setPhase] = useState("loading");
+  const [studentName, setStudentName] = useState("");
+  const [studentMode, setStudentMode] = useState("");
+  const [activeNode, setActiveNode] = useState(null);
+  const [portfolioData, setPortfolioData] = useState({});
+  const [progress, setProgress] = useState({ principles: {}, bridgeComplete: false, instruments: {} });
+
+  useEffect(() => {
+    async function init() {
+      const saved = await loadState("php_session_v2");
+      if (saved) {
+        setStudentName(saved.name); setStudentMode(saved.mode);
+        setPortfolioData(saved.portfolio || {});
+        setProgress(saved.progress || { principles: {}, bridgeComplete: false, instruments: {} });
+        setPhase("dashboard");
+      } else { setPhase("orientation"); }
+    }
+    init();
+  }, []);
+
+  const persist = async (newPortfolio, newProgress) => {
+    setPortfolioData(newPortfolio); setProgress(newProgress);
+    await saveState("php_session_v2", { name: studentName, mode: studentMode, portfolio: newPortfolio, progress: newProgress });
+  };
+
+  const handleBegin = async (name, mode) => {
+    setStudentName(name); setStudentMode(mode);
+    await saveState("php_session_v2", { name, mode, portfolio: {}, progress: { principles: {}, bridgeComplete: false, instruments: {} } });
+    setPhase("dashboard");
+  };
+
+  const handleSaveNodeData = async (nodeKey, data) => {
+    const newPortfolio = { ...portfolioData, [nodeKey]: data };
+    const newProgress = { ...progress };
+    if (nodeKey.startsWith("principle_")) { const id = parseInt(nodeKey.split("_")[1]); newProgress.principles[id] = true; }
+    else if (nodeKey === "bridge") {
+      const allRevealed = BRIDGE_EXERCISES.every((_, i) => data?.exercises?.[i]?.analysisRevealed);
+      const allDeclared = INSTRUMENTS.every(inst => (data?.declarations?.[inst.id] || "").trim().length > 40);
+      newProgress.bridgeComplete = allRevealed && allDeclared;
+    } else if (nodeKey.startsWith("inst_")) { newProgress.instruments[nodeKey] = true; }
+    await persist(newPortfolio, newProgress);
+  };
+
+  const allPrinciplesDone = Object.keys(progress.principles || {}).length >= 10;
+  const bridgeDone = progress.bridgeComplete || false;
+  const instrumentsUnlocked = allPrinciplesDone && bridgeDone;
+
+  const getNodeStatus = (key) => {
+    if (key === "bridge") {
+      if (!allPrinciplesDone) return "locked";
+      return bridgeDone ? "complete" : "available";
+    }
+    if (key.startsWith("inst_")) {
+      if (!instrumentsUnlocked) return "locked";
+      const data = portfolioData[key];
+      const drafted = Object.keys(data?.drafts || {}).filter(k => (data.drafts[k] || "").trim().length > 50).length;
+      return drafted >= 3 ? "complete" : drafted > 0 ? "active" : "available";
+    }
+    const data = portfolioData[key];
+    if (!data) return "available";
+    const hasQuiz = data?.quiz?.score !== undefined;
+    const hasCase = (data?.caseResponse || "").trim().length > 30;
+    const hasReflect = (data?.reflection || "").trim().length > 30;
+    if (hasQuiz && hasCase && hasReflect) return "complete";
+    if (hasQuiz || hasCase || hasReflect) return "active";
+    return "available";
+  };
+
+  if (phase === "loading") return <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: "#52B788", fontFamily: "Georgia, serif" }}>Loading…</div></div>;
+  if (phase === "orientation") return <OrientationScreen onBegin={handleBegin} />;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0b1a14", display: "grid", gridTemplateColumns: "260px 1fr 280px", fontFamily: "Georgia, serif" }}>
+
+      {/* ── LEFT RAIL ── */}
+      <div style={{ background: "#080f0c", borderRight: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem 0", overflowY: "auto", maxHeight: "100vh", position: "sticky", top: 0 }}>
+        <div style={{ padding: "0 1rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ color: "#74C69D", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>Population Health Policy</div>
+          <div style={{ color: "#f0fdf4", fontSize: 14 }}>{studentName}</div>
+          <div style={{ color: "#475569", fontSize: 11 }}>{studentMode} mode</div>
+        </div>
+
+        <div style={{ padding: "1rem 0.75rem" }}>
+          {/* Principles */}
+          <div style={{ color: "#334155", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 0.25rem", marginBottom: "0.5rem" }}>Principles</div>
+          {PRINCIPLES.map(p => {
+            const status = getNodeStatus(`principle_${p.id}`);
+            const isActive = activeNode === `principle_${p.id}`;
+            return (
+              <button key={p.id} onClick={() => setActiveNode(`principle_${p.id}`)}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "0.5rem 0.7rem", marginBottom: 2, border: isActive ? "1px solid rgba(116,198,157,0.3)" : "1px solid transparent", background: isActive ? "rgba(45,106,79,0.25)" : "transparent", borderRadius: 6, cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: status === "complete" ? "rgba(45,106,79,0.5)" : status === "active" ? "rgba(45,106,79,0.2)" : "rgba(255,255,255,0.05)", border: status === "complete" ? "1px solid rgba(116,198,157,0.5)" : "1px solid rgba(255,255,255,0.1)" }}>
+                  {status === "complete" ? <span style={{ color: "#74C69D", fontSize: 10 }}>✓</span> : <span style={{ color: "#475569", fontSize: 9 }}>{p.id}</span>}
+                </div>
+                <span style={{ color: isActive ? "#B7E4C7" : status === "complete" ? "#52B788" : "#64748b", fontSize: 12, lineHeight: 1.3 }}>{p.short}</span>
+              </button>
+            );
+          })}
+
+          {/* Bridge Node */}
+          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0.6rem 0.25rem" }} />
+          {(() => {
+            const bridgeStatus = getNodeStatus("bridge");
+            const isActive = activeNode === "bridge";
+            const isLocked = bridgeStatus === "locked";
+            return (
+              <button onClick={() => { if (!isLocked) setActiveNode("bridge"); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "0.6rem 0.7rem", marginBottom: 2, border: isActive ? "1px solid rgba(116,198,157,0.4)" : "1px solid rgba(255,255,255,0.06)", background: isActive ? "rgba(45,106,79,0.2)" : isLocked ? "transparent" : "rgba(116,198,157,0.04)", borderRadius: 8, cursor: isLocked ? "not-allowed" : "pointer", textAlign: "left", transition: "all 0.15s", opacity: isLocked ? 0.45 : 1 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 4, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: bridgeStatus === "complete" ? "rgba(45,106,79,0.5)" : isLocked ? "rgba(255,255,255,0.03)" : "rgba(116,198,157,0.15)", border: bridgeStatus === "complete" ? "1px solid rgba(116,198,157,0.5)" : "1px solid rgba(116,198,157,0.2)" }}>
+                  {isLocked ? <LockIcon /> : bridgeStatus === "complete" ? <span style={{ color: "#74C69D", fontSize: 10 }}>✓</span> : <span style={{ color: "#74C69D", fontSize: 9 }}>◈</span>}
+                </div>
+                <div>
+                  <div style={{ color: isActive ? "#B7E4C7" : isLocked ? "#334155" : "#74C69D", fontSize: 12, lineHeight: 1.2, fontWeight: 600 }}>Bridge Module</div>
+                  <div style={{ color: "#475569", fontSize: 10, marginTop: 1 }}>Evidence → Instruments</div>
+                </div>
+              </button>
+            );
+          })()}
+          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0.6rem 0.25rem" }} />
+
+          {/* Instruments */}
+          <div style={{ color: "#334155", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 0.25rem", marginBottom: "0.5rem" }}>Policy Instruments</div>
+          {INSTRUMENTS.map(inst => {
+            const status = getNodeStatus(`inst_${inst.id}`);
+            const isActive = activeNode === `inst_${inst.id}`;
+            const isLocked = status === "locked";
+            return (
+              <button key={inst.id} onClick={() => { if (!isLocked) setActiveNode(`inst_${inst.id}`); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "0.5rem 0.7rem", marginBottom: 2, border: isActive ? "1px solid rgba(116,198,157,0.4)" : "1px solid transparent", background: isActive ? "rgba(27,67,50,0.4)" : "transparent", borderRadius: 6, cursor: isLocked ? "not-allowed" : "pointer", textAlign: "left", transition: "all 0.15s", opacity: isLocked ? 0.4 : 1 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 4, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: status === "complete" ? "rgba(45,106,79,0.6)" : isLocked ? "rgba(255,255,255,0.03)" : "rgba(45,106,79,0.2)", border: status === "complete" ? "1px solid rgba(116,198,157,0.6)" : "1px solid rgba(255,255,255,0.1)" }}>
+                  {isLocked ? <LockIcon /> : status === "complete" ? <span style={{ color: "#74C69D", fontSize: 10 }}>✓</span> : <span style={{ color: "#52B788", fontSize: 8 }}>◈</span>}
+                </div>
+                <span style={{ color: isActive ? "#B7E4C7" : isLocked ? "#334155" : "#64748b", fontSize: 12, lineHeight: 1.3 }}>{inst.short}</span>
+              </button>
+            );
+          })}
+
+          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0.75rem 0.25rem" }} />
+          <button onClick={() => setActiveNode("portfolio")}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "0.5rem 0.7rem", border: activeNode === "portfolio" ? "1px solid rgba(116,198,157,0.3)" : "1px solid transparent", background: activeNode === "portfolio" ? "rgba(45,106,79,0.25)" : "transparent", borderRadius: 6, cursor: "pointer", textAlign: "left" }}>
+            <span style={{ fontSize: 14, color: "#52B788" }}>◉</span>
+            <span style={{ color: activeNode === "portfolio" ? "#B7E4C7" : "#64748b", fontSize: 12 }}>My Portfolio</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── CENTER WORKSPACE ── */}
+      <div style={{ padding: "2rem", overflowY: "auto", maxHeight: "100vh" }}>
+        {!activeNode ? (
+          <div style={{ maxWidth: 600, margin: "3rem auto", textAlign: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: "1.5rem" }}>◈</div>
+            <h2 style={{ color: "#f0fdf4", fontWeight: 400, fontSize: "1.5rem", marginBottom: "1rem" }}>Welcome back, {studentName}</h2>
+            <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.7, marginBottom: "2rem" }}>
+              {!allPrinciplesDone ? "Work through the 10 principles to build your conceptual foundation. The Bridge module and policy instruments will unlock when you're ready." : !bridgeDone ? "All 10 principles complete. The Bridge module is now open — encounter the evidence before you draft." : "Bridge complete. Your policy instruments are unlocked. Your declarations are waiting in each instrument's workspace."}
+            </p>
+            <button onClick={() => setActiveNode(!allPrinciplesDone ? "principle_1" : !bridgeDone ? "bridge" : "inst_strategy")}
+              style={{ padding: "0.7rem 2rem", background: "linear-gradient(135deg, #2D6A4F, #40916C)", border: "none", borderRadius: 8, color: "#f0fdf4", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 14 }}>
+              {!allPrinciplesDone ? "Continue with Principles →" : !bridgeDone ? "Enter the Bridge →" : "Begin Drafting →"}
+            </button>
+          </div>
+        ) : activeNode === "portfolio" ? (
+          <PortfolioView studentName={studentName} progress={progress} portfolioData={portfolioData} />
+        ) : activeNode === "bridge" ? (
+          <BridgeModuleView
+            savedData={portfolioData.bridge}
+            onSave={(data) => handleSaveNodeData("bridge", data)}
+            onComplete={() => setActiveNode("inst_strategy")}
+          />
+        ) : activeNode.startsWith("principle_") ? (
+          <PrincipleView
+            principle={PRINCIPLES.find(p => `principle_${p.id}` === activeNode)}
+            savedData={portfolioData[activeNode]}
+            onSave={(data) => handleSaveNodeData(activeNode, data)}
+          />
+        ) : activeNode.startsWith("inst_") ? (
+          <InstrumentView
+            instrument={INSTRUMENTS.find(i => `inst_${i.id}` === activeNode)}
+            savedData={portfolioData[activeNode]}
+            onSave={(data) => handleSaveNodeData(activeNode, data)}
+            bridgeDeclaration={portfolioData.bridge?.declarations?.[activeNode.replace("inst_", "")]}
+          />
+        ) : null}
+      </div>
+
+      {/* ── RIGHT RAIL ── */}
+      <div style={{ background: "#060d0a", borderLeft: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem", overflowY: "auto", maxHeight: "100vh", position: "sticky", top: 0 }}>
+        <p style={{ color: "#334155", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 1rem" }}>Portfolio Snapshot</p>
+
+        {/* Principles grid */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ color: "#64748b", fontSize: 12 }}>Principles</span>
+            <span style={{ color: "#52B788", fontSize: 12 }}>{Object.keys(progress.principles || {}).length}/10</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+            {PRINCIPLES.map(p => {
+              const data = portfolioData[`principle_${p.id}`];
+              const status = data?.quiz?.score !== undefined && (data?.caseResponse || "").length > 30 && (data?.reflection || "").length > 30 ? "done" : data ? "partial" : "empty";
+              return (
+                <div key={p.id} title={p.short} onClick={() => setActiveNode(`principle_${p.id}`)}
+                  style={{ height: 28, borderRadius: 4, cursor: "pointer", background: status === "done" ? "rgba(45,106,79,0.5)" : status === "partial" ? "rgba(45,106,79,0.2)" : "rgba(255,255,255,0.04)", border: status === "done" ? "1px solid rgba(116,198,157,0.4)" : "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: status === "done" ? "#74C69D" : "#334155", fontSize: 10 }}>
+                  {p.id}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bridge indicator */}
+        <div style={{ marginBottom: "1.5rem", padding: "0.7rem 0.9rem", background: bridgeDone ? "rgba(45,106,79,0.2)" : allPrinciplesDone ? "rgba(116,198,157,0.06)" : "rgba(255,255,255,0.02)", border: bridgeDone ? "1px solid rgba(116,198,157,0.3)" : "1px solid rgba(255,255,255,0.07)", borderRadius: 8, cursor: "pointer" }}
+          onClick={() => { if (allPrinciplesDone) setActiveNode("bridge"); }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: bridgeDone ? "#74C69D" : allPrinciplesDone ? "#52B788" : "#334155", fontSize: 12 }}>Bridge Module</span>
+            <span style={{ fontSize: 11, color: bridgeDone ? "#52B788" : allPrinciplesDone ? "#d48e1a" : "#334155" }}>{bridgeDone ? "✓ Complete" : allPrinciplesDone ? "Ready" : "🔒"}</span>
+          </div>
+          {allPrinciplesDone && !bridgeDone && (
+            <p style={{ color: "#64748b", fontSize: 11, margin: "4px 0 0", lineHeight: 1.4 }}>3 exercises · unlock instruments</p>
+          )}
+        </div>
+
+        {/* Instruments */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <p style={{ color: "#64748b", fontSize: 12, margin: "0 0 0.75rem" }}>Instruments</p>
+          {INSTRUMENTS.map(inst => {
+            const data = portfolioData[`inst_${inst.id}`];
+            const drafted = Object.keys(data?.drafts || {}).filter(k => (data.drafts[k] || "").trim().length > 50).length;
+            const isLocked = !instrumentsUnlocked;
+            return (
+              <div key={inst.id} style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ color: isLocked ? "#334155" : "#94a3b8", fontSize: 11 }}>{inst.short}</span>
+                  <span style={{ color: "#52B788", fontSize: 11 }}>{isLocked ? "🔒" : `${drafted}/${inst.sections.length}`}</span>
+                </div>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                  <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #2D6A4F, #74C69D)", width: isLocked ? "0%" : `${(drafted / inst.sections.length) * 100}%`, transition: "width 0.4s" }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Status notice */}
+        {!allPrinciplesDone && (
+          <div style={{ background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.15)", borderRadius: 8, padding: "0.9rem", marginBottom: "1rem" }}>
+            <p style={{ color: "#52B788", fontSize: 11, lineHeight: 1.6, margin: 0 }}>Complete all 10 principles to unlock the Bridge module.</p>
+            <p style={{ color: "#475569", fontSize: 10, margin: "0.5rem 0 0" }}>{10 - Object.keys(progress.principles || {}).length} remaining</p>
+          </div>
+        )}
+        {allPrinciplesDone && !bridgeDone && (
+          <div style={{ background: "rgba(116,198,157,0.08)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 8, padding: "0.9rem", marginBottom: "1rem" }}>
+            <p style={{ color: "#74C69D", fontSize: 11, lineHeight: 1.6, margin: 0 }}>Bridge module unlocked. Complete 3 exercises + declarations to unlock policy instruments.</p>
+          </div>
+        )}
+
+        {/* Quick nav */}
+        <div>
+          <p style={{ color: "#334155", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 0.75rem" }}>Quick Jump</p>
+          {PRINCIPLES.filter(p => { const d = portfolioData[`principle_${p.id}`]; return !d || !d.quiz || !d.caseResponse || !d.reflection; }).slice(0, 3).map(p => (
+            <button key={p.id} onClick={() => setActiveNode(`principle_${p.id}`)}
+              style={{ width: "100%", padding: "0.5rem 0.75rem", marginBottom: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 6, cursor: "pointer", textAlign: "left", color: "#64748b", fontFamily: "Georgia, serif", fontSize: 11 }}>
+              ↪ {p.short}
+            </button>
+          ))}
+          {allPrinciplesDone && !bridgeDone && (
+            <button onClick={() => setActiveNode("bridge")}
+              style={{ width: "100%", padding: "0.5rem 0.75rem", marginBottom: 4, background: "rgba(116,198,157,0.08)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 6, cursor: "pointer", textAlign: "left", color: "#74C69D", fontFamily: "Georgia, serif", fontSize: 11 }}>
+              ↪ Bridge Module
+            </button>
+          )}
+          {instrumentsUnlocked && INSTRUMENTS.map(inst => {
+            const data = portfolioData[`inst_${inst.id}`];
+            const drafted = Object.keys(data?.drafts || {}).filter(k => (data.drafts[k] || "").trim().length > 50).length;
+            if (drafted < inst.sections.length) return (
+              <button key={inst.id} onClick={() => setActiveNode(`inst_${inst.id}`)}
+                style={{ width: "100%", padding: "0.5rem 0.75rem", marginBottom: 4, background: "rgba(45,106,79,0.1)", border: "1px solid rgba(116,198,157,0.2)", borderRadius: 6, cursor: "pointer", textAlign: "left", color: "#52B788", fontFamily: "Georgia, serif", fontSize: 11 }}>
+                ↪ {inst.short}
+              </button>
+            );
+            return null;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      React.createElement(App)
+    );
+  </script>
+</body>
+</html>
